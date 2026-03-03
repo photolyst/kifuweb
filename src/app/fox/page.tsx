@@ -160,13 +160,17 @@ export default function FoxPage() {
       setDownloadProgress(`ダウンロード中... (${i + 1}/${targets.length})`);
 
       try {
-        const res = await fetch(
-          `/api/fox/sgf?chessid=${encodeURIComponent(game.chessid)}`,
-        );
+        const rawFilename = gameLabel(game);
+        const params = new URLSearchParams({
+          chessid: game.chessid,
+          sjis: String(useSjis),
+          filename: rawFilename,
+        });
+        const res = await fetch(`/api/fox/sgf?${params}`);
         const data = await res.json();
         if (!res.ok || !data.sgf) continue;
 
-        const filename = gameLabel(game);
+        const filename = data.filename || rawFilename;
         downloadFile(filename, data.sgf, useSjis);
 
         // 連続ダウンロードの間隔

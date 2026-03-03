@@ -2,20 +2,19 @@ import { NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 
-// id_name_map.txt を読み込んでマップを構築（サーバー起動時に1回だけ）
-function loadIdNameMap(): Map<string, string> {
+function loadTextMap(filename: string): Map<string, string> {
   const map = new Map<string, string>();
   try {
-    const filePath = path.join(process.cwd(), "src/lib/fox/id_name_map.txt");
+    const filePath = path.join(process.cwd(), `src/lib/fox/${filename}`);
     const lines = fs.readFileSync(filePath, "utf-8").split("\n");
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) continue;
       const eqIndex = trimmed.indexOf("=");
       if (eqIndex === -1) continue;
-      const id = trimmed.slice(0, eqIndex).trim();
-      const name = trimmed.slice(eqIndex + 1).trim();
-      if (id && name) map.set(id, name);
+      const key = trimmed.slice(0, eqIndex).trim();
+      const val = trimmed.slice(eqIndex + 1).trim();
+      if (key && val) map.set(key, val);
     }
   } catch {
     // ファイルが読めない場合はマップ空で続行
@@ -23,7 +22,8 @@ function loadIdNameMap(): Map<string, string> {
   return map;
 }
 
-const idNameMap = loadIdNameMap();
+const idNameMap = loadTextMap("id_name_map.txt");
+const utf8SjisMap = loadTextMap("utf8_sjis_map.txt");
 
 // PB[id] / PW[id] を名前に置換
 function idToName(sgf: string): string {
@@ -48,17 +48,27 @@ function standardizeRanks(sgf: string): string {
   return sgf.replace(/级/g, "k*").replace(/段/g, "d*");
 }
 
-function transformSgf(sgf: string): string {
-  return idToName(standardizeRanks(fixKomi(sgf)));
+// utf8_sjis_map を使って文字を置換（SJIS変換時のみ適用）
+function applyUtf8SjisMap(text: string): string {
+  return [...text].map((c) => utf8SjisMap.get(c) ?? c).join("");
+}
+
+function transformSgf(sgf: string, sjis: boolean): string {
+  const base = idToName(standardizeRanks(fixKomi(sgf)));
+  return sjis ? applyUtf8SjisMap(base) : base;
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const chessid = searchParams.get("chessid");
+  const sjis = searchParams.get("sjis") === "true";
+  const rawFilename = searchParams.get("filename") ?? "";
 
   if (!chessid) {
     return NextResponse.json({ error: "chessid is required" }, { status: 400 });
   }
+
+  const filename = sjis ? applyUtf8SjisMap(rawFilename) : rawFilename;
 
   const params = new URLSearchParams({ chessid });
   const url = `https://h5.foxwq.com/yehuDiamond/chessbook_local/YHWQFetchChess?${params}`;
@@ -69,7 +79,10 @@ export async function GET(request: Request) {
       if (!response.ok) continue;
       const data = await response.json();
       if (data.chess) {
-        return NextResponse.json({ sgf: transformSgf(data.chess) });
+        return NextResponse.json({
+          sgf: transformSgf(data.chess, sjis),
+          filename,
+        });
       }
     } catch {
       if (i === 9) {
