@@ -190,7 +190,7 @@ export default function FoxPage() {
   return (
     <div className="flex min-h-svh w-full items-start justify-center p-8">
       <div className="flex w-full max-w-2xl flex-col gap-6">
-        <h1 className="text-2xl font-bold">Fox囲碁 棋譜ダウンロード</h1>
+        <h1 className="text-2xl font-bold">野狐囲碁 棋譜ダウンロード</h1>
 
         {/* ユーザー検索 */}
         <Card>
@@ -203,7 +203,7 @@ export default function FoxPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Fox IDを入力してください"
+                placeholder="野狐囲碁IDを入力してください"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 disabled={isUserLoading}
               />
