@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type FoxUserInfo = {
   uid?: number;
+  username?: string;
+  surename?: string;
   [key: string]: unknown;
 };
 
@@ -228,7 +230,16 @@ export default function FoxPage() {
                 onClick={() => setIsUserInfoOpen((v) => !v)}
                 className="flex w-full items-center justify-between text-left"
               >
-                <CardTitle>ユーザー情報</CardTitle>
+                <div className="flex flex-col gap-1">
+                  <CardTitle>ユーザー情報</CardTitle>
+                  {!isUserInfoOpen && (
+                    <p className="text-sm text-muted-foreground">
+                      uid: {String(userInfo.uid ?? "—")}　 username:{" "}
+                      {String(userInfo.username ?? "—")}　 surename:{" "}
+                      {String(userInfo.surename ?? "—")}
+                    </p>
+                  )}
+                </div>
                 <span className="text-muted-foreground text-sm">
                   {isUserInfoOpen ? "▲ 閉じる" : "▼ 開く"}
                 </span>
@@ -256,7 +267,7 @@ export default function FoxPage() {
           <Button
             onClick={handleFetchGames}
             disabled={isGamesLoading}
-            variant="outline"
+            variant="default"
           >
             {isGamesLoading ? "取得中..." : "棋譜一覧を取得"}
           </Button>

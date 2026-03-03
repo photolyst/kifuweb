@@ -31,6 +31,12 @@ export async function GET(request: Request) {
       );
     }
     const data = await response.json();
+    if (data.uid === 0 || data.uid == null) {
+      return NextResponse.json(
+        { error: "ユーザーが見つかりませんでした" },
+        { status: 404 },
+      );
+    }
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
