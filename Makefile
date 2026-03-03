@@ -2,9 +2,17 @@
 dev:
 	pnpm dev
 
+.PHONY: start
+start: supabase.start
+
+.PHONY: stop
+stop: supabase.stop
+
+# ---------------------
+
 .PHONY: supabase.start
 supabase.start:
-	pnpm exec supabase start
+	pnpm dlx env-cmd -f .env.local supabase start
 
 .PHONY: supabase.status
 supabase.status:
